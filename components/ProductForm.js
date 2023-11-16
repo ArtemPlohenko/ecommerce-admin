@@ -1,6 +1,8 @@
 import { useRouter } from "next/router";
 import { useState } from "react";
 import axios from "axios";
+import Spinner from "./Spinner";
+import { ReactSortable } from "react-sortablejs";
 
 export default function ProductForm({
   _id,
@@ -14,6 +16,7 @@ export default function ProductForm({
   const [price, setPrice] = useState(existingPrice || "");
   const [images, setImages] = useState(existingImages || []);
   const [goToProducts, setGoToProducts] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
   const router = useRouter();
 
   //   console.log({ _id });
@@ -42,6 +45,8 @@ export default function ProductForm({
     // console.log(ev);
     const files = ev.target?.files;
     if (files?.length > 0) {
+      setIsUploading(true);
+
       const data = new FormData();
 
       for (const file of files) {
@@ -60,7 +65,14 @@ export default function ProductForm({
       setImages((oldImages) => {
         return [...oldImages, ...res.data.links];
       });
+
+      setIsUploading(false);
     }
+  }
+
+  function uploadImagesOrder(images) {
+    // console.log(images);
+    setImages(images);
   }
 
   return (
@@ -68,13 +80,20 @@ export default function ProductForm({
       <label>Product name</label>
       <input type="text" placeholder="product name" value={title} onChange={(ev) => setTitle(ev.target.value)} />
       <label>Photos</label>
-      <div className="mb-2 flex flex-wrap gap-2">
-        {!!images?.length &&
-          images.map((link) => (
-            <div key={link} className="h-24">
-              <img src={link} alt="" className="rounded-lg" />
-            </div>
-          ))}
+      <div className="mb-2 flex flex-wrap gap-1">
+        <ReactSortable list={images} className="flex flex-wrap gap-1" setList={uploadImagesOrder}>
+          {!!images?.length &&
+            images.map((link) => (
+              <div key={link} className="h-24">
+                <img src={link} alt="" className="rounded-lg" />
+              </div>
+            ))}
+        </ReactSortable>
+        {isUploading && (
+          <div className="w-24 h-24 p-1 bg-gray-200 flex justify-center items-center rounded-lg">
+            <Spinner />
+          </div>
+        )}
         <label className="w-24 h-24 cursor-pointer flex flex-col items-center justify-center text-gray-500 rounded-lg bg-gray-200">
           <svg
             xmlns="http://www.w3.org/2000/svg"
